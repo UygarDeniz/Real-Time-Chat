@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { createServer } from 'http';
@@ -6,6 +6,8 @@ import { Server } from 'socket.io';
 import userRouter from './routes/userRoutes.js';
 import conversationRouter from './routes/conversationRoutes.js';
 import cors from 'cors';
+
+dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
@@ -45,10 +47,9 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-  
-  console.log(`User connected: ${userId}`);
+  console.log(`User connected: ${socket.userId}`);
 
-  activeUsers.set(userId, socket.id);
+  activeUsers.set(socket.userId, socket.id);
   io.emit('activeUsers', Array.from(activeUsers.keys()));
 
   socket.on('message', ({ to, message, conversationId }) => {
@@ -60,10 +61,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`User disconnected: ${userId}`);
-    activeUsers.delete(userId);
+    console.log(`User disconnected: ${socket.userId}`);
+    activeUsers.delete(socket.userId);
 
-    io.emit('user-disconnected', userId);
+    io.emit('user-disconnected', socket.userId);
   });
 });
 

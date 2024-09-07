@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import prisma from '../db.js';
-
-export const register = async (req, res) => {
+import { Request, Response } from 'express';
+export const register = async (req: Request, res: Response) => {
   const { name, password } = req.body;
 
   if (!name || !password) {
@@ -27,7 +27,7 @@ export const register = async (req, res) => {
       },
     });
 
-    const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET!);
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -44,7 +44,7 @@ export const register = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
+export const login = async (req: Request, res: Response) => {
   const { name, password } = req.body;
 
   if (!name || !password) {
@@ -66,7 +66,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!);
 
     res.cookie('token', token, { httpOnly: true });
 
@@ -79,24 +79,21 @@ export const login = async (req, res) => {
   }
 };
 
-export const logout = (req, res) => {
+export const logout = (req: Request, res: Response) => {
   res.clearCookie('token', { httpOnly: true });
   return res.status(200).json({ message: 'User logged out' });
 };
 
-export const currentUser = async (req, res) => {
+export const currentUser = async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ message: 'Not authorized' });
   }
+
   return res.status(200).json({ name: req.user.name, id: req.user.id });
 };
 
-export const getUserById = async (req, res) => {
+export const getUserById = async (req: Request, res: Response) => {
   const userId = req.params.id;
-
-  if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
-  }
 
   try {
     const user = await prisma.user.findUnique({

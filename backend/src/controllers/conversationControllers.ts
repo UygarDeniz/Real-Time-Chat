@@ -1,5 +1,6 @@
 import prisma from '../db.js';
-export const getMyConversations = async (req, res) => {
+import { Request, Response } from 'express';
+export const getMyConversations = async (req: Request, res: Response) => {
   const userId = req.user?.id;
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -40,10 +41,10 @@ export const getMyConversations = async (req, res) => {
   }
 };
 
-export const getMessages = async (req, res) => {
-  const currentUserId = req.user.id;
-  const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 9;
+export const getMessages = async (req: Request, res: Response) => {
+  const currentUserId = req.user?.id;
+  const page = parseInt(req.query.page as string) || 1;
+  const pageSize = parseInt(req.query.pageSize as string) || 9;
   const conversationId = req.params.conversationId;
 
   if (!currentUserId) {
@@ -88,7 +89,7 @@ export const getMessages = async (req, res) => {
   }
 };
 
-export const createMessage = async (req, res) => {
+export const createMessage = async (req:Request, res:Response) => {
   const fromId = req.user?.id;
   const { conversationId } = req.params;
   const { text, toId } = req.body;
@@ -198,7 +199,7 @@ export const createMessage = async (req, res) => {
   }
 };
 
-export const checkExistingConversation = async (req, res) => {
+export const checkExistingConversation = async (req:Request, res:Response) => {
   const userId = req.user?.id;
   const otherUserId = req.params.userId;
 
@@ -229,7 +230,7 @@ export const checkExistingConversation = async (req, res) => {
   }
 };
 
-export const openConversation = async (req, res) => {
+export const openConversation = async (req:Request, res:Response) => {
   const userId = req.user?.id;
   const { conversationId } = req.params;
 
