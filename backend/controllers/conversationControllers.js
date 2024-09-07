@@ -1,7 +1,6 @@
 import prisma from '../db.js';
 export const getMyConversations = async (req, res) => {
   const userId = req.user?.id;
-
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
@@ -52,6 +51,18 @@ export const getMessages = async (req, res) => {
   }
 
   try {
+    // Check if the user is part of the conversation
+    const userConversation = await prisma.userConversation.findFirst({
+      where: {
+        userId: currentUserId,
+        conversationId,
+      },
+    });
+
+    if (!userConversation) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
     const messages = await prisma.message.findMany({
       where: {
         conversationId,
@@ -66,7 +77,7 @@ export const getMessages = async (req, res) => {
       take: pageSize,
     });
 
-    if (!messages) {
+    if (!messages.length) {
       return res.status(404).json({ message: 'Messages not found' });
     }
 
@@ -87,7 +98,11 @@ export const createMessage = async (req, res) => {
   }
 
   if (!text) {
-    return res.status(400).json({ message: 'text is required' });
+    return res.status(400).json({ message: 'Text is required' });
+  }
+
+  if (!toId) {
+    return res.status(400).json({ message: 'Recipient is required' });
   }
 
   try {
@@ -103,30 +118,37 @@ export const createMessage = async (req, res) => {
             { users: { some: { id: toId } } },
           ],
         },
-        include: { users: true },
+        include: {
+          users: {
+            select: { id: true, name: true },
+          },
+        },
       });
 
       if (!conversation) {
-        // Create a new conversation
-        conversation = await prisma.conversation.create({
-          data: {
-            users: {
-              connect: [{ id: fromId }, { id: toId }],
+        // Create new conversation and user conversation
+        conversation = await prisma.$transaction(async (prisma) => {
+          const conversation = await prisma.conversation.create({
+            data: {
+              users: {
+                connect: [{ id: fromId }, { id: toId }],
+              },
             },
-          },
-          include: {
-            users: {
-              select: { id: true, name: true },
+            include: {
+              users: {
+                select: { id: true, name: true },
+              },
             },
-          },
-        });
+          });
 
-        // Create UserConversation entries for both users
-        await prisma.userConversation.createMany({
-          data: [
-            { userId: fromId, conversationId: conversation.id },
-            { userId: toId, conversationId: conversation.id },
-          ],
+          await prisma.userConversation.createMany({
+            data: [
+              { userId: fromId, conversationId: conversation.id },
+              { userId: toId, conversationId: conversation.id },
+            ],
+          });
+
+          return conversation;
         });
 
         isNewConversation = true;
