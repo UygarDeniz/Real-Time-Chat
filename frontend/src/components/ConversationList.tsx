@@ -47,7 +47,7 @@ function ConversationList() {
     );
   };
   return (
-    <div className='overflow-y-auto'>
+    <div className='overflow-y-hidden'>
       {conversations?.map((conversation) => {
         const otherUser = conversation.users.find((u) => u.id !== id);
         const isOnline = otherUser ? activeUsers?.has(otherUser.id) : false;
