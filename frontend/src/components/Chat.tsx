@@ -170,7 +170,7 @@ function Chat() {
           <span>{selectedChat?.to || 'Select a chat'}</span>
         </h2>
       </div>
-      <div className=' overflow-hidden h-[80%]'>
+      <div className=' overflow-hidden h-full'>
         <MessageList messages={data} ref={ref} />
       </div>
 
