@@ -9,15 +9,19 @@ import cors from 'cors';
 
 const app = express();
 const httpServer = createServer(app);
+
+const PORT = process.env.PORT || 3000;
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: CLIENT_ORIGIN,
   },
 });
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: CLIENT_ORIGIN,
     credentials: true,
   })
 );
@@ -31,10 +35,17 @@ app.use('/api/conversations', conversationRouter);
 
 const activeUsers = new Map();
 
-io.on('connection', (socket) => {
+io.use((socket, next) => {
   const userId = socket.handshake.auth.id;
-  if (!userId) return;
+  if (!userId) {
+    return next(new Error('Invalid user ID'));
+  }
+  socket.userId = userId;
+  next();
+});
 
+io.on('connection', (socket) => {
+  
   console.log(`User connected: ${userId}`);
 
   activeUsers.set(userId, socket.id);
@@ -56,6 +67,6 @@ io.on('connection', (socket) => {
   });
 });
 
-httpServer.listen(3000, () => {
-  console.log('listening on *:3000');
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
