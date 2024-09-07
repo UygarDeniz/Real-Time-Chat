@@ -1,0 +1,58 @@
+import { forwardRef } from 'react';
+import { Message } from '../types';
+import { InfiniteData } from '@tanstack/react-query';
+import { useUser } from '../contexts/userContext';
+
+type MessageListProps = {
+  messages: InfiniteData<Message[]> | undefined;
+};
+
+const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
+  ({ messages }, ref) => {
+    const { id: currentUserId } = useUser();
+
+    return (
+      <div className=' h-full px-4 overflow-y-auto flex flex-col-reverse'>
+        <div>
+          {messages?.pages.map((page, pageIndex) => (
+            <div key={pageIndex} className='flex flex-col-reverse h-full'>
+              {page.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex my-4 ${
+                    message?.authorId === currentUserId
+                      ? 'justify-end'
+                      : 'justify-start'
+                  }`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
+                      message?.authorId === currentUserId
+                        ? 'bg-indigo-500 dark:bg-indigo-800 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    }`}
+                  >
+                    <p>{message.text}</p>
+                    <p className='text-xs mt-1 opacity-75'>
+                      {new Date(message?.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              <div ref={ref}></div>
+            </div>
+          ))}
+        </div>
+        {(!messages ||
+          messages.pages.length === 0 ||
+          messages.pages[0].length === 0) && (
+          <p className='text-center text-gray-500 dark:text-gray-400 mb-8'>
+            No messages yet. Send your first message!
+          </p>
+        )}
+      </div>
+    );
+  }
+);
+
+export default MessageList;
