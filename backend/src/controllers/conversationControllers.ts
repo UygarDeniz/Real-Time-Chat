@@ -271,7 +271,6 @@ export const openConversation = async (req: Request, res: Response) => {
 export const getConversationById = async (req: Request, res: Response) => {
   const userId = req.user?.id;
   const { conversationId } = req.params;
-  console.log('conversationId', conversationId);
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
@@ -329,12 +328,20 @@ export const findOrCreateConversation = async (req: Request, res: Response) => {
         users: {
           select: { id: true, name: true },
         },
+        UserConversation: {
+          where: {
+            userId,
+          },
+          select: {
+            unreadCount: true,
+          },
+        },
       },
     });
 
     if (!conversation) {
       conversation = await prisma.$transaction(async (prisma) => {
-        const conversation = await prisma.conversation.create({
+        const newConversation = await prisma.conversation.create({
           data: {
             users: {
               connect: [{ id: userId }, { id: to }],
@@ -349,12 +356,22 @@ export const findOrCreateConversation = async (req: Request, res: Response) => {
 
         await prisma.userConversation.createMany({
           data: [
-            { userId, conversationId: conversation.id },
-            { userId: to, conversationId: conversation.id },
+            { userId, conversationId: newConversation.id },
+            { userId: to, conversationId: newConversation.id },
           ],
         });
 
-        return conversation;
+        const userConversations = await prisma.userConversation.findMany({
+          where: {
+            conversationId: newConversation.id,
+            userId,
+          },
+          select: {
+            unreadCount: true,
+          },
+        });
+
+        return { ...newConversation, UserConversation: userConversations };
       });
 
       return res.status(201).json({ conversation });

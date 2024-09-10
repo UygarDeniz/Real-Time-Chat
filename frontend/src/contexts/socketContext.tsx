@@ -63,8 +63,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         queryClient.setQueryData(
           ['conversations'],
           (oldData: Conversation[]) => {
-            console.log('oldData', oldData);
-
             if (!oldData) return [];
 
             return oldData.map((conv) =>
@@ -73,8 +71,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
                     ...conv,
                     UserConversation: [
                       {
-                        ...conv.UserConversation[0],
-                        unreadCount: conv.UserConversation[0].unreadCount + 1,
+                        ...conv.UserConversation?.[0],
+                        unreadCount: conv.UserConversation?.[0].unreadCount + 1,
                       },
                     ],
                   }

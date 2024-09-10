@@ -44,8 +44,6 @@ function SearchUser() {
   const findOrCreateConversationMutation = useMutation({
     mutationFn: (to: string) => findOrCreateConversation(to),
     onSuccess: (data) => {
-      console.log(data);
-
       const otherUser = data.conversation.users.find(
         (u: User) => u.id === user.id
       );
@@ -54,6 +52,7 @@ function SearchUser() {
         to: otherUser.name,
         toId: otherUser.id,
       });
+
       setShowResult(false);
       queryClient.setQueryData<Conversation[]>(
         ['conversations'],
@@ -70,7 +69,7 @@ function SearchUser() {
   };
 
   return (
-    <div className='mt-4 mx-1 dark:bg-gray-800 rounded-lg'>
+    <div className='mt-4 mx-1 dark:bg-gray-800 rounded-lg cursor-pointer'>
       {showSearch ? (
         <form onSubmit={handleSearch} className='flex items-center'>
           <input

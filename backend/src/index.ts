@@ -54,7 +54,6 @@ io.on('connection', (socket) => {
 
   socket.on('message', ({ to, message, conversationId }) => {
     const recipientSocketId = activeUsers.get(to);
-    console.log('recipientSocketId', recipientSocketId);
     if (recipientSocketId) {
       socket.to(recipientSocketId).emit('message', { message, conversationId });
     }
