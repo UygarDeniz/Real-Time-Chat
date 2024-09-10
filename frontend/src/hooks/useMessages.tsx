@@ -51,17 +51,16 @@ export const useMessages = () => {
       queryClient.setQueryData<InfiniteData<Message[]>>(
         ['messages', data.conversation.id],
         (prevData) => {
-          if (prevData) {
-            const updatedPages = prevData.pages.map((page, index) =>
-              index === 0 ? [data.message, ...page] : page
-            );
-            return { ...prevData, pages: updatedPages };
-          } else {
+          if (!prevData) {
             return {
               pages: [[data.message]],
               pageParams: [undefined],
             };
           }
+          const updatedPages = prevData.pages.map((page, index) =>
+            index === 0 ? [data.message, ...page] : [...page]
+          );
+          return { ...prevData, pages: updatedPages };
         }
       );
 

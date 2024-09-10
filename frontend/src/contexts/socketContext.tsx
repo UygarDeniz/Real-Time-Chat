@@ -85,9 +85,16 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       queryClient.setQueryData<InfiniteData<Message[]>>(
         ['messages', conversationId],
         (prevData) => {
-          const pages = prevData?.pages.map((page) => [...page]) ?? [];
-          pages[0]?.unshift(message);
-          return { ...prevData!, pages };
+          if (!prevData) {
+            return {
+              pages: [[message]],
+              pageParams: [undefined],
+            };
+          }
+          const updatedPages = prevData.pages.map((page, index) =>
+            index === 0 ? [message, ...page] : [...page]
+          );
+          return { ...prevData, pages: updatedPages };
         }
       );
     };
