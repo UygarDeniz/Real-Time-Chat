@@ -89,7 +89,7 @@ export const getMessages = async (req: Request, res: Response) => {
   }
 };
 
-export const createMessage = async (req:Request, res:Response) => {
+export const createMessage = async (req: Request, res: Response) => {
   const fromId = req.user?.id;
   const { conversationId } = req.params;
   const { text, toId } = req.body;
@@ -199,7 +199,10 @@ export const createMessage = async (req:Request, res:Response) => {
   }
 };
 
-export const checkExistingConversation = async (req:Request, res:Response) => {
+export const checkExistingConversation = async (
+  req: Request,
+  res: Response
+) => {
   const userId = req.user?.id;
   const otherUserId = req.params.userId;
 
@@ -230,7 +233,7 @@ export const checkExistingConversation = async (req:Request, res:Response) => {
   }
 };
 
-export const openConversation = async (req:Request, res:Response) => {
+export const openConversation = async (req: Request, res: Response) => {
   const userId = req.user?.id;
   const { conversationId } = req.params;
 
@@ -261,6 +264,103 @@ export const openConversation = async (req:Request, res:Response) => {
     return res.status(200).json(conversation);
   } catch (error) {
     console.error('Error opening conversation:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const getConversationById = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  const { conversationId } = req.params;
+  console.log('conversationId', conversationId);
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        users: {
+          select: { id: true, name: true },
+        },
+        UserConversation: {
+          where: {
+            userId,
+          },
+          select: {
+            unreadCount: true,
+          },
+        },
+      },
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+
+    return res.status(200).json(conversation);
+  } catch (error) {
+    console.error('Error fetching conversation:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const findOrCreateConversation = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  const { to } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  if (!to) {
+    return res.status(400).json({ message: 'Recipient is required' });
+  }
+
+  try {
+    let conversation = await prisma.conversation.findFirst({
+      where: {
+        AND: [
+          { users: { some: { id: userId } } },
+          { users: { some: { id: to } } },
+        ],
+      },
+      include: {
+        users: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    if (!conversation) {
+      conversation = await prisma.$transaction(async (prisma) => {
+        const conversation = await prisma.conversation.create({
+          data: {
+            users: {
+              connect: [{ id: userId }, { id: to }],
+            },
+          },
+          include: {
+            users: {
+              select: { id: true, name: true },
+            },
+          },
+        });
+
+        await prisma.userConversation.createMany({
+          data: [
+            { userId, conversationId: conversation.id },
+            { userId: to, conversationId: conversation.id },
+          ],
+        });
+
+        return conversation;
+      });
+
+      return res.status(201).json({ conversation });
+    }
+  } catch (error) {
+    console.error('Error finding or creating conversation:', error);
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };

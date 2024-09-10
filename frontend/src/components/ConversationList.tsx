@@ -20,10 +20,11 @@ function ConversationList() {
   if (isPending) return <Loading />;
 
   const handleSelectChat = async (conversation: Conversation) => {
+    const otherUser = conversation.users.find((u: User) => u.id !== id);
     setSelectedChat({
       chatId: conversation.id,
-      to: conversation.users.find((u: User) => u.id !== id)?.name || '',
-      toId: conversation.users.find((u: User) => u.id !== id)?.id || '',
+      to: otherUser?.name as string,
+      toId: otherUser?.id as string,
     });
 
     // Reset unread count in the backend
@@ -73,9 +74,9 @@ function ConversationList() {
                   {otherUser?.name}
                 </span>
               </div>
-              {conversation.UserConversation[0]?.unreadCount > 0 && (
+              {conversation?.UserConversation?.[0]?.unreadCount > 0 && (
                 <span className='bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full'>
-                  {conversation.UserConversation[0]?.unreadCount}
+                  {conversation?.UserConversation?.[0]?.unreadCount}
                 </span>
               )}
             </div>

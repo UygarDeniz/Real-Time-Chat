@@ -1,6 +1,5 @@
 import SideBar from './SideBar';
 import Chat from './Chat';
-
 function Home() {
   return (
     <div className='flex justify-center  py-6 h-screen dark:bg-gray-800'>
