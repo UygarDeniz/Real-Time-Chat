@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Conversation, User } from '../types';
-import { useSelectedChat } from '../contexts/selectedChatContext';
+import { useSelectedChat } from '../contexts/SelectedChatContext';
+
 import useProtectedAxios from './useProtectedAxios';
-import { useUser } from '../contexts/userContext';
+import { useUser } from '../contexts/UserContext';
 
 export const useGetMyConversations = () => {
   const protectedAxios = useProtectedAxios();

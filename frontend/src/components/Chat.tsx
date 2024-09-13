@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSelectedChat } from '../contexts/selectedChatContext';
+import { useSelectedChat } from '../contexts/SelectedChatContext';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { useGetMessages, useCreateMessage } from '../hooks/useMessages';

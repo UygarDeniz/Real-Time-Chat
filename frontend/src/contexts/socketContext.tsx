@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import io, { Socket } from 'socket.io-client';
-import { useUser } from './userContext';
+import { useUser } from './UserContext';
+import { useSelectedChat } from './SelectedChatContext';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 import { Conversation, Message } from '../types';
-import { useSelectedChat } from './selectedChatContext';
+import io, { Socket } from 'socket.io-client';
 
 type SocketContextType = {
   socket: Socket | null;

@@ -1,6 +1,6 @@
 import SearchUser from './SearchUser';
 import ConversationList from './ConversationList';
-import { useSocket } from '../contexts/socketContext';
+import { useSocket } from '../contexts/SocketContext';
 import UserId from './UserId';
 import SideButtons from './SideButtons';
 function SideBar() {

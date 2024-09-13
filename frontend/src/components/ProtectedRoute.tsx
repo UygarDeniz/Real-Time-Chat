@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useUser } from '../contexts/userContext';
+import { useUser } from '../contexts/UserContext';
 import { useEffect, useState } from 'react';
 import Loading from './Loading';
 

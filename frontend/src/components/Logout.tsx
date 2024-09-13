@@ -1,5 +1,5 @@
 import { LogOut } from 'lucide-react';
-import { useUser } from '../contexts/userContext';
+import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 function Logout() {
   const navigate = useNavigate();

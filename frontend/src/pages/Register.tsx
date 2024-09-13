@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/userContext';
+import { useUser } from '../contexts/UserContext';
 const Register = () => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');

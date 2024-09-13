@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { Message } from '../types';
 import { InfiniteData } from '@tanstack/react-query';
-import { useUser } from '../contexts/userContext';
+import { useUser } from '../contexts/UserContext';
 
 type MessageListProps = {
   messages: InfiniteData<Message[]> | undefined;

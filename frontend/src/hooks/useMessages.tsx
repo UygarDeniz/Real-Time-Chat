@@ -4,9 +4,9 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useSelectedChat } from '../contexts/selectedChatContext';
-import { useSocket } from '../contexts/socketContext';
-import { useUser } from '../contexts/userContext';
+import { useSelectedChat } from '../contexts/SelectedChatContext';
+import { useSocket } from '../contexts/SocketContext';
+import { useUser } from '../contexts/UserContext';
 import { useEffect } from 'react';
 import { Conversation, Message, User } from '../types';
 import { useInView } from 'react-intersection-observer';

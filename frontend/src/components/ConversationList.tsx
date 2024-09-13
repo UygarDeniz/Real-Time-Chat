@@ -1,8 +1,8 @@
 import Loading from './Loading';
-import { useUser } from '../contexts/userContext';
-import { useSelectedChat } from '../contexts/selectedChatContext';
+import { useUser } from '../contexts/UserContext';
+import { useSelectedChat } from '../contexts/SelectedChatContext';
+import { useSocket } from '../contexts/SocketContext';
 import { User, Conversation } from '../types';
-import { useSocket } from '../contexts/socketContext';
 import {
   useGetMyConversations,
   useOpenConversation,

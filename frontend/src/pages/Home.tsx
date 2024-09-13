@@ -1,5 +1,5 @@
-import SideBar from './SideBar';
-import Chat from './Chat';
+import SideBar from '../components/SideBar';
+import Chat from '../components/Chat';
 function Home() {
   return (
     <div className='flex justify-center  py-6 h-screen dark:bg-gray-800'>

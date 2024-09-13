@@ -2,7 +2,7 @@
 // OLD CODE
 
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/userContext';
+import { useUser } from '../contexts/UserContext';
 
 let refreshPromise: Promise<string | null> | null = null;
 

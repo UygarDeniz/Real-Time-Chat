@@ -1,4 +1,4 @@
-import { useUser } from '../contexts/userContext';
+import { useUser } from '../contexts/UserContext';
 import axios from '../api/axios';
 export const useRefreshToken = () => {
   const { setAccessToken } = useUser();
