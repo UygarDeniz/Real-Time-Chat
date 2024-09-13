@@ -9,7 +9,7 @@ type MessageListProps = {
 
 const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
   ({ messages }, ref) => {
-    const { id: currentUserId } = useUser();
+    const { user: currentUser} = useUser();
 
     return (
       <div className='  px-4 overflow-y-auto flex flex-col-reverse h-full pt-[0.1rem]'>
@@ -19,14 +19,14 @@ const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
               <div
                 key={message.id}
                 className={`flex  my-3 ${
-                  message?.authorId === currentUserId
+                  message?.authorId === currentUser?.id
                     ? 'justify-end'
                     : 'justify-start'
                 }`}
               >
                 <div
                   className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
-                    message?.authorId === currentUserId
+                    message?.authorId === currentUser?.id
                       ? 'bg-indigo-500 dark:bg-indigo-800 text-white'
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                   }`}

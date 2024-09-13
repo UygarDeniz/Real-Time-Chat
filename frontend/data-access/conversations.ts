@@ -1,5 +1,4 @@
 import { Conversation } from '../src/types';
-
 export const fetchConversations = async (): Promise<Conversation[]> => {
   const response = await fetch('/api/conversations/myconversations');
   if (!response.ok) {

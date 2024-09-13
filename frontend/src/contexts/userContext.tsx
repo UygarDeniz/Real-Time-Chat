@@ -4,45 +4,42 @@ import {
   Dispatch,
   ReactNode,
   useContext,
-  useEffect,
 } from 'react';
-
-import { fetchCurrentUser } from '../../data-access/users';
-
+import { useNavigate } from 'react-router-dom';
+import { User } from '../types';
+import axios from '../api/axios';
+import { useMutation } from '@tanstack/react-query';
 type UserContextType = {
-  name: string | undefined;
-  id: string | undefined;
-  setName: Dispatch<React.SetStateAction<string | undefined>>;
-  setId: Dispatch<React.SetStateAction<string | undefined>>;
-  loading: boolean;
+  user: User | undefined;
+  setUser: Dispatch<
+    React.SetStateAction<{ name: string; id: string } | undefined>
+  >;
+  accessToken: string | undefined;
+  setAccessToken: Dispatch<React.SetStateAction<string | undefined>>;
+  logout: () => void;
 };
 
 const UserContext = createContext<null | UserContextType>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [name, setName] = useState<string | undefined>();
-  const [id, setId] = useState<string | undefined>();
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<UserContextType['user']>();
+  const [accessToken, setAccessToken] =
+    useState<UserContextType['accessToken']>();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = await fetchCurrentUser();
-        setName(user.name);
-        setId(user.id);
-      } catch (error) {
-        console.error('Failed to fetch current user:', error);
-        // Optionally, you can redirect to the login page here
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [name, id]);
+  const { mutate: logout } = useMutation({
+    mutationFn: () => axios.post('/api/auth/logout'),
+    onSuccess: () => {
+      setUser(undefined);
+      setAccessToken(undefined);
+      navigate('/login');
+    },
+  });
 
   return (
-    <UserContext.Provider value={{ name, id, setName, setId, loading }}>
+    <UserContext.Provider
+      value={{ user, setUser, accessToken, setAccessToken, logout }}
+    >
       {children}
     </UserContext.Provider>
   );

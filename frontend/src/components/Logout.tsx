@@ -1,8 +1,9 @@
 import { LogOut } from 'lucide-react';
-import { logout } from '../../data-access/users';
+import { useUser } from '../contexts/userContext';
 import { useNavigate } from 'react-router-dom';
 function Logout() {
   const navigate = useNavigate();
+  const { logout } = useUser();
   const handleLogout = async () => {
     try {
       await logout();

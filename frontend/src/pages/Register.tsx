@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/userContext';
 const Register = () => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { setUser, setAccessToken } = useUser();
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -19,10 +21,11 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(data.message);
-        setName('');
-        setPassword('');
-        navigate('/login');
+        setUser({ name: data.name, id: data.id });
+        setAccessToken(data.accessToken);
+
+        
+        navigate('/');
       }
 
       setMessage(data.message);

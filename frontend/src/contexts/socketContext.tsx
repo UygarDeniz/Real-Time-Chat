@@ -13,17 +13,17 @@ type SocketContextType = {
 const SocketContext = createContext<null | SocketContextType>(null);
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-  const { id } = useUser();
+  const { user: currentUser } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useState(new Set<string>());
   const queryClient = useQueryClient();
   const { selectedChat } = useSelectedChat();
   useEffect(() => {
-    if (!id) {
+    if (!currentUser) {
       return;
     }
     const newSocket = io('http://localhost:3000', {
-      auth: { id },
+      auth: { id: currentUser.id },
     });
 
     setSocket(newSocket);
@@ -46,6 +46,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       message: Message;
       conversationId: string;
     }) => {
+      // If the message is not from the selected chat, increment the unread count
       if (conversationId !== selectedChat?.chatId) {
         const existingConversations =
           queryClient.getQueryData<Conversation[]>(['conversations']) || [];
@@ -104,7 +105,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       newSocket.disconnect();
     };
-  }, [id, queryClient, selectedChat?.chatId]);
+  }, [currentUser, queryClient, selectedChat?.chatId]);
 
   return (
     <SocketContext.Provider value={{ socket, activeUsers }}>

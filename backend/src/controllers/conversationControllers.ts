@@ -1,7 +1,7 @@
 import prisma from '../db.js';
 import { Request, Response } from 'express';
 export const getMyConversations = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const userId = req.userId;
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
@@ -33,6 +33,9 @@ export const getMyConversations = async (req: Request, res: Response) => {
           },
         },
       },
+      orderBy: {
+        lastMessageAt: 'desc',
+      },
     });
     return res.status(200).json(conversations);
   } catch (error) {
@@ -42,7 +45,7 @@ export const getMyConversations = async (req: Request, res: Response) => {
 };
 
 export const getMessages = async (req: Request, res: Response) => {
-  const currentUserId = req.user?.id;
+  const currentUserId = req.userId;
   const page = parseInt(req.query.page as string) || 1;
   const pageSize = parseInt(req.query.pageSize as string) || 9;
   const conversationId = req.params.conversationId;
@@ -90,7 +93,7 @@ export const getMessages = async (req: Request, res: Response) => {
 };
 
 export const createMessage = async (req: Request, res: Response) => {
-  const fromId = req.user?.id;
+  const fromId = req.userId;
   const { conversationId } = req.params;
   const { text, toId } = req.body;
 
@@ -107,91 +110,50 @@ export const createMessage = async (req: Request, res: Response) => {
   }
 
   try {
-    let conversation;
-    let isNewConversation = false;
-
-    if (!conversationId || conversationId === 'new') {
-      // Check if a conversation already exists
-      conversation = await prisma.conversation.findFirst({
-        where: {
-          AND: [
-            { users: { some: { id: fromId } } },
-            { users: { some: { id: toId } } },
-          ],
-        },
-        include: {
-          users: {
-            select: { id: true, name: true },
-          },
-        },
-      });
-
-      if (!conversation) {
-        // Create new conversation and user conversation
-        conversation = await prisma.$transaction(async (prisma) => {
-          const conversation = await prisma.conversation.create({
-            data: {
-              users: {
-                connect: [{ id: fromId }, { id: toId }],
-              },
-            },
-            include: {
-              users: {
-                select: { id: true, name: true },
-              },
-            },
-          });
-
-          await prisma.userConversation.createMany({
-            data: [
-              { userId: fromId, conversationId: conversation.id },
-              { userId: toId, conversationId: conversation.id },
-            ],
-          });
-
-          return conversation;
-        });
-
-        isNewConversation = true;
-      }
-    } else {
-      // Find existing conversation
-      conversation = await prisma.conversation.findUnique({
-        where: { id: conversationId },
-        include: {
-          users: {
-            select: { id: true, name: true },
-          },
-        },
-      });
-
-      if (!conversation) {
-        return res.status(404).json({ message: 'Conversation not found' });
-      }
-    }
-
-    const newMessage = await prisma.message.create({
-      data: {
-        text,
-        author: { connect: { id: fromId } },
-        conversation: { connect: { id: conversation.id } },
-      },
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { users: true },
     });
 
-    await prisma.userConversation.updateMany({
-      where: {
-        conversationId: conversation.id,
-        userId: { not: fromId },
-      },
-      data: {
-        unreadCount: { increment: 1 },
-      },
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+
+    if (
+      !conversation.users.some((user) => user.id === fromId) ||
+      !conversation.users.some((user) => user.id === toId)
+    ) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const newMessage = await prisma.$transaction(async (prisma) => {
+      const message = await prisma.message.create({
+        data: {
+          text,
+          author: { connect: { id: fromId } },
+          conversation: { connect: { id: conversation.id } },
+        },
+      });
+
+      await prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { lastMessageAt: new Date() },
+      });
+
+      await prisma.userConversation.updateMany({
+        where: {
+          conversationId: conversation.id,
+          userId: { not: fromId },
+        },
+        data: { unreadCount: { increment: 1 } },
+      });
+
+      return message;
     });
 
     return res.status(201).json({
       message: newMessage,
-      isNewConversation,
-      conversation,
+      conversation
     });
   } catch (error) {
     console.error('Error creating message:', error);
@@ -203,7 +165,7 @@ export const checkExistingConversation = async (
   req: Request,
   res: Response
 ) => {
-  const userId = req.user?.id;
+  const userId = req.userId;
   const otherUserId = req.params.userId;
 
   if (!userId) {
@@ -234,7 +196,7 @@ export const checkExistingConversation = async (
 };
 
 export const openConversation = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const userId = req.userId;
   const { conversationId } = req.params;
 
   if (!userId) {
@@ -269,7 +231,7 @@ export const openConversation = async (req: Request, res: Response) => {
 };
 
 export const getConversationById = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const userId = req.userId;
   const { conversationId } = req.params;
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -305,7 +267,7 @@ export const getConversationById = async (req: Request, res: Response) => {
 };
 
 export const findOrCreateConversation = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const userId = req.userId;
   const { to } = req.body;
 
   if (!userId) {

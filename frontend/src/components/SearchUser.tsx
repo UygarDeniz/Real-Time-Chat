@@ -1,16 +1,15 @@
 import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { fetchUserById } from '../../data-access/users';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelectedChat } from '../contexts/selectedChatContext';
-import { findOrCreateConversation } from '../../data-access/conversations';
-import { Conversation, User } from '../types';
+
+import { useFindOrCreateConversation } from '../hooks/useConversations';
+import { useQuery } from '@tanstack/react-query';
+import { protectedAxios } from '../api/axios';
 function SearchUser() {
   const [showSearch, setShowSearch] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  const { setSelectedChat } = useSelectedChat();
-  const queryClient = useQueryClient();
+  const { mutate: findOrCreateConversationMutation } =
+    useFindOrCreateConversation();
   const searchRef = useRef<HTMLInputElement>(null);
   const toggleInput = () => {
     setShowSearch((prev) => !prev);
@@ -30,7 +29,10 @@ function SearchUser() {
     error,
   } = useQuery({
     queryKey: ['user', searchValue],
-    queryFn: () => fetchUserById(searchValue.trim()),
+    queryFn: async () => {
+      const res = await protectedAxios.get(`/api/auth/${searchValue.trim()}`);
+      return res.data;
+    },
     enabled: false,
   });
 
@@ -41,30 +43,14 @@ function SearchUser() {
       setShowResult(true);
     }
   };
-  const findOrCreateConversationMutation = useMutation({
-    mutationFn: (to: string) => findOrCreateConversation(to),
-    onSuccess: (data) => {
-      const otherUser = data.conversation.users.find(
-        (u: User) => u.id === user.id
-      );
-      setSelectedChat({
-        chatId: data.conversation.id,
-        to: otherUser.name,
-        toId: otherUser.id,
-      });
 
-      setShowResult(false);
-      queryClient.setQueryData<Conversation[]>(
-        ['conversations'],
-        (prevData) => {
-          return [...prevData!, data.conversation];
-        }
-      );
-    },
-  });
   const handleSelectChat = async () => {
     if (user) {
-      findOrCreateConversationMutation.mutate(user.id);
+      findOrCreateConversationMutation(user.id, {
+        onSuccess: () => {
+          setShowResult(false);
+        },
+      });
     }
   };
 

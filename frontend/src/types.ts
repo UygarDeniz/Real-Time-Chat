@@ -24,5 +24,6 @@ export type Conversation = {
   users: User[];
   messages: Message[];
   createdAt: Date;
+  lastMessageSentAt: Date;
   UserConversation: UserConversation[];
 };

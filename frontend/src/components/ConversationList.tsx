@@ -1,56 +1,40 @@
-import { fetchConversations } from '../../data-access/conversations';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Loading from './Loading';
 import { useUser } from '../contexts/userContext';
 import { useSelectedChat } from '../contexts/selectedChatContext';
-import Loading from './Loading';
 import { User, Conversation } from '../types';
 import { useSocket } from '../contexts/socketContext';
-
+import {
+  useGetMyConversations,
+  useOpenConversation,
+} from '../hooks/useConversations';
 function ConversationList() {
   const { selectedChat, setSelectedChat } = useSelectedChat();
-  const { id } = useUser();
+  const { user: currentUser } = useUser();
   const { activeUsers } = useSocket();
-  const queryClient = useQueryClient();
+  const { mutate: openConversation } = useOpenConversation();
 
-  const { data: conversations, isPending } = useQuery({
-    queryKey: ['conversations'],
-    queryFn: fetchConversations,
-  });
-
+  const { data: conversations, isLoading: isPending } = useGetMyConversations();
   if (isPending) return <Loading />;
 
   const handleSelectChat = async (conversation: Conversation) => {
-    const otherUser = conversation.users.find((u: User) => u.id !== id);
+    const otherUser = conversation.users.find(
+      (u: User) => u.id !== currentUser?.id
+    );
     setSelectedChat({
       chatId: conversation.id,
       to: otherUser?.name as string,
       toId: otherUser?.id as string,
     });
 
-    // Reset unread count in the backend
-    await fetch(`/api/conversations/${conversation.id}/open`, {
-      method: 'POST',
-    });
-
-    // Reset unread count in the local cache
-
-    queryClient.setQueryData(['conversations'], (oldData: Conversation[]) =>
-      oldData.map((conv) =>
-        conv.id === conversation.id
-          ? {
-              ...conv,
-              UserConversation: [
-                { ...conv.UserConversation[0], unreadCount: 0 },
-              ],
-            }
-          : conv
-      )
-    );
+    openConversation(conversation.id);
   };
+
   return (
     <div className='overflow-y-hidden'>
       {conversations?.map((conversation) => {
-        const otherUser = conversation.users.find((u) => u.id !== id);
+        const otherUser = conversation.users.find(
+          (u) => u.id !== currentUser?.id
+        );
         const isOnline = otherUser ? activeUsers?.has(otherUser.id) : false;
 
         return (

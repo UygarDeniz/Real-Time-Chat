@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useSelectedChat } from '../contexts/selectedChatContext';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import { useMessages } from '../hooks/useMessages';
+import { useGetMessages, useCreateMessage } from '../hooks/useMessages';
 function Chat() {
   const { selectedChat } = useSelectedChat();
   const [messageInput, setMessageInput] = useState('');
-  const { messages, createMessageMutation, ref } = useMessages();
+  const { messages, ref } = useGetMessages();
+  const createMessageMutation = useCreateMessage();
 
   // emit create , create emit?
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {

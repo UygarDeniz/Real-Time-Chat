@@ -6,13 +6,6 @@ export const fetchCurrentUser = async () => {
 
   return await response.json();
 };
-
-export const logout = async () => {
-  const response = await fetch('/api/auth/logout');
-  if (!response.ok) {
-    throw new Error('Failed to logout');
-  }
-};
 export const fetchUserById = async (id: string) => {
   const response = await fetch(`/api/auth/${id}`);
   if (!response.ok) {

@@ -11,9 +11,13 @@ model User {
   id               String             @id @default(cuid())
   name             String             @unique
   password         String
+  refreshToken     String?
   messages         Message[]
   conversations    Conversation[]
   UserConversation UserConversation[]
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt 
 }
 
 model Message {
@@ -23,15 +27,19 @@ model Message {
   authorId       String
   conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String?
+  
   createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt 
 }
 
 model Conversation {
   id               String             @id @default(cuid())
   users            User[]
   messages         Message[]
-  createdAt        DateTime           @default(now())
   UserConversation UserConversation[]
+  lastMessageAt    DateTime? 
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt 
 }
 
 model UserConversation {
@@ -41,5 +49,8 @@ model UserConversation {
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String
   unreadCount    Int          @default(0)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt 
   @@unique([userId, conversationId])
 }

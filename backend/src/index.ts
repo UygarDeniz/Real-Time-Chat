@@ -47,8 +47,6 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.userId}`);
-
   activeUsers.set(socket.userId, socket.id);
   io.emit('activeUsers', Array.from(activeUsers.keys()));
 

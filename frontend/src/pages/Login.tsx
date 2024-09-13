@@ -6,7 +6,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const { setName: setUserName, setId } = useUser();
+  const { setUser, setAccessToken } = useUser();
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -25,8 +25,8 @@ const Login = () => {
         setPassword('');
 
         // context
-        setUserName(name);
-        setId(data.id);
+        setUser({ name: data.name, id: data.id });
+        setAccessToken(data.accessToken);
         navigate('/');
       }
 

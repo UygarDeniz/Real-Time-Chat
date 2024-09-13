@@ -7,22 +7,26 @@ import {
 import { useSelectedChat } from '../contexts/selectedChatContext';
 import { useSocket } from '../contexts/socketContext';
 import { useUser } from '../contexts/userContext';
-import { createMessage, fetchMessages } from '../../data-access/messages';
 import { useEffect } from 'react';
-import { Message, User } from '../types';
+import { Conversation, Message, User } from '../types';
 import { useInView } from 'react-intersection-observer';
+import useProtectedAxios from './useProtectedAxios';
 
-export const useMessages = () => {
-  const queryClient = useQueryClient();
-  const { socket } = useSocket();
+export const useGetMessages = () => {
+  const protectedAxios = useProtectedAxios();
   const { selectedChat } = useSelectedChat();
-  const { id } = useUser();
   const { ref, inView } = useInView();
-
   const { data, fetchNextPage } = useInfiniteQuery({
     queryKey: ['messages', selectedChat?.chatId],
-    queryFn: ({ pageParam }) =>
-      fetchMessages(selectedChat?.chatId || '', pageParam),
+    queryFn: async ({ pageParam }): Promise<Message[]> => {
+      const conversationId = selectedChat?.chatId;
+      const pageSize = 9;
+      const response = await protectedAxios(
+        `/api/conversations/${conversationId}/messages?page=${pageParam}&pageSize=${pageSize}`
+      );
+      return response.data;
+    },
+
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === 9 ? allPages.length + 1 : undefined;
     },
@@ -32,13 +36,20 @@ export const useMessages = () => {
 
   useEffect(() => {
     if (inView) {
-      console.log('fetching next page');
       fetchNextPage();
     }
   }, [inView, fetchNextPage]);
 
-  const createMessageMutation = useMutation({
-    mutationFn: ({
+  return { messages: data, ref };
+};
+
+export const useCreateMessage = () => {
+  const protectedAxios = useProtectedAxios();
+  const { user: currentUser } = useUser();
+  const queryClient = useQueryClient();
+  const { socket } = useSocket();
+  return useMutation({
+    mutationFn: async ({
       conversationId,
       text,
       toId,
@@ -46,7 +57,14 @@ export const useMessages = () => {
       conversationId: string;
       text: string;
       toId: string;
-    }) => createMessage(conversationId, text, toId),
+    }) => {
+      const response = await protectedAxios.post(
+        `/api/conversations/${conversationId}/messages`,
+        { text, toId }
+      );
+
+      return response.data;
+    },
     onSuccess: (data) => {
       queryClient.setQueryData<InfiniteData<Message[]>>(
         ['messages', data.conversation.id],
@@ -64,13 +82,27 @@ export const useMessages = () => {
         }
       );
 
+      queryClient.setQueryData<Conversation[]>(['conversations'], (oldData) => {
+        if (!oldData) return [];
+
+        return oldData.map((conv) =>
+          conv.id === data.conversation.id
+            ? {
+                ...conv,
+                lastMessageSentAt: data.message.createdAt,
+              }
+            : conv
+        );
+      });
+
+      const otherUser = data.conversation.users.find(
+        (u: User) => u.id !== currentUser?.id
+      );
       socket?.emit('message', {
-        to: data.conversation.users.find((u: User) => u.id !== id)?.id,
+        to: otherUser?.id,
         message: data.message,
         conversationId: data.conversation.id,
       });
     },
   });
-
-  return { messages: data, createMessageMutation, ref };
 };
