@@ -4,10 +4,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      ACCESS_TOKEN_SECRET: d86e9b5d5af9dfdadfb76ec48c9a7b3b9bb5f2df0cbdc709e687db2ab3816f8edee3cf5f877e63accebe05931f95a12719a9f793e05131d69a858698df29e966
-      REFRESH_TOKEN_SECRET: e981d8d41ef88516cfccd835866ebb72f4f981332f64f977305e36839e2af47322734ff5ea2b59e5667b69ddad1febafcb230e8e45bbc31e7133202ee1ac1fe0
-      DATABASE_URL: "file:/app/prisma/dev.db"
-      CLIENT_ORIGIN: "http://localhost:4173"
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN}
     volumes:
       - ./backend/prisma:/app/prisma
     
@@ -16,7 +16,7 @@ services:
     ports:
       - "4173:4173"
     environment:
-      VITE_BACKEND_URL: "http://backend:3000"
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL}
     depends_on:
       - backend
   
